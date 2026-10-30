@@ -28,6 +28,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fcl.plugin.mobileglues.R
+import androidx.compose.ui.graphics.Color
+import com.fcl.plugin.mobileglues.settings.ThemeMode
+import top.yukonga.miuix.kmp.theme.ColorSchemeMode
+import top.yukonga.miuix.kmp.theme.ThemeController
+import top.yukonga.miuix.kmp.theme.ThemePaletteStyle
 import com.fcl.plugin.mobileglues.ui.AppController
 import com.fcl.plugin.mobileglues.ui.AppSubPage
 import com.fcl.plugin.mobileglues.ui.AppTab
@@ -55,8 +60,24 @@ import top.yukonga.miuix.kmp.theme.lightColorScheme
  */
 @Composable
 fun MiuixApp(controller: AppController) {
-    val dark = isSystemInDarkTheme()
-    MiuixTheme(colors = if (dark) darkColorScheme() else lightColorScheme()) {
+    val themeMode by controller.pluginConfig.themeMode.collectAsStateWithLifecycle()
+    val primaryColor by controller.pluginConfig.primaryColor.collectAsStateWithLifecycle()
+
+    val colorSchemeMode = when (themeMode) {
+        ThemeMode.System -> ColorSchemeMode.MonetSystem
+        ThemeMode.Light -> ColorSchemeMode.MonetLight
+        ThemeMode.Dark -> ColorSchemeMode.MonetDark
+    }
+
+    val themeController = remember(themeMode, primaryColor) {
+        ThemeController(
+            colorSchemeMode = colorSchemeMode,
+            keyColor = Color(primaryColor),
+            paletteStyle = ThemePaletteStyle.Fidelity,
+        )
+    }
+
+    MiuixTheme(controller = themeController) {
         val tab by controller.tab.collectAsStateWithLifecycle()
         val subPage by controller.subPage.collectAsStateWithLifecycle()
         val snackbarHostState = remember { SnackbarHostState() }

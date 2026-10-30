@@ -5,6 +5,7 @@ on:
     branches: 
       - main
       - dev
+      - integration/plus-mobileglues-app
   workflow_dispatch:
 
 jobs:
@@ -42,10 +43,18 @@ jobs:
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
 
+      - name: Decode release keystore
+        run: |
+          echo "$SIGNING_KEYSTORE_BASE64" | base64 --decode > keystore.jks
+          test -s keystore.jks
+        env:
+          SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+
       - name: Build apk
         run: ./gradlew assembleRelease
         env:
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEYSTORE_PATH: ../keystore.jks
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
 

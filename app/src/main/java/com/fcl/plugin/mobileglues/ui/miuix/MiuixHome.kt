@@ -1,5 +1,6 @@
 package com.fcl.plugin.mobileglues.ui.miuix
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExitTransition
@@ -65,6 +66,8 @@ fun MiuixHomePage(controller: AppController) {
     val deviceInfo by controller.deviceInfo.collectAsStateWithLifecycle()
     val config by controller.configStore.config.collectAsStateWithLifecycle()
     val untuned by controller.multidrawUntuned.collectAsStateWithLifecycle()
+    val themeMode by controller.pluginConfig.themeMode.collectAsStateWithLifecycle()
+    val primaryColor by controller.pluginConfig.primaryColor.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) { controller.ensureDeviceInfo() }
 
@@ -105,6 +108,15 @@ fun MiuixHomePage(controller: AppController) {
         Spacer(Modifier.height(28.dp))
 
         EnterUp(entered, delayMillis = 160) { DeviceInfoBlock(deviceInfo) }
+        Spacer(Modifier.height(24.dp))
+        EnterUp(entered, delayMillis = 205) {
+            MiuixAppearancePanel(
+                themeMode = themeMode,
+                primaryColor = primaryColor,
+                onThemeModeChange = controller.pluginConfig::setThemeMode,
+                onColorChange = controller.pluginConfig::setPrimaryColor,
+            )
+        }
 
         Spacer(Modifier.height(24.dp))
 
@@ -152,7 +164,7 @@ private fun Wordmark(version: String) {
         Text(
             text = buildAnnotatedString {
                 withStyle(SpanStyle(color = MiuixTheme.colorScheme.onBackground)) { append("Mobile") }
-                withStyle(SpanStyle(color = MiuixTheme.colorScheme.primary)) { append("Glues") }
+                withStyle(SpanStyle(color = MiuixTheme.colorScheme.primary)) { append("Glues+") }
             },
             style = MiuixTheme.textStyles.title1,
             fontSize = 40.sp,

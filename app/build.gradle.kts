@@ -22,10 +22,17 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("../keystore.jks")
-            storePassword = System.getenv("SIGNING_STORE_PASSWORD") ?: project.findProperty("SIGNING_STORE_PASSWORD") as String?
-            keyAlias = System.getenv("SIGNING_KEY_ALIAS") ?: project.findProperty("SIGNING_KEY_ALIAS") as String?
-            keyPassword = System.getenv("SIGNING_KEY_PASSWORD") ?: project.findProperty("SIGNING_KEY_PASSWORD") as String?
+            val keystorePath = System.getenv("SIGNING_KEYSTORE_PATH")
+                ?: project.findProperty("SIGNING_KEYSTORE_PATH") as String?
+                ?: "../keystore.jks"
+
+            storeFile = file(keystorePath)
+            storePassword = System.getenv("SIGNING_STORE_PASSWORD")
+                ?: project.findProperty("SIGNING_STORE_PASSWORD") as String?
+            keyAlias = System.getenv("SIGNING_KEY_ALIAS")
+                ?: project.findProperty("SIGNING_KEY_ALIAS") as String?
+            keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
+                ?: project.findProperty("SIGNING_KEY_PASSWORD") as String?
         }
     }
 
@@ -40,9 +47,9 @@ android {
         }
 
         configureEach {
-            resValue("string","app_name","MobileGlues")
+            resValue("string", "app_name", "+ MobileGlues")
 
-            manifestPlaceholders["des"] = "MobileGlues (OpenGL 4.0, 1.17+)"
+            manifestPlaceholders["des"] = "+ MobileGlues (OpenGL 4.0, 1.17+) | TOWO Enhancements - Minecraft 26.3 Shader Compatibility Fixes"
             manifestPlaceholders["renderer"] = "MobileGlues:libmobileglues.so:libmobileglues.so"
 
             manifestPlaceholders["minMCVer"] = "1.17"

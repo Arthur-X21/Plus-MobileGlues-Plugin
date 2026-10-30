@@ -25,6 +25,20 @@ enum class UiStyle(val key: String) {
     }
 }
 
+/**
+ * Application theme mode.
+ */
+enum class ThemeMode(val key: String) {
+    System("system"),
+    Light("light"),
+    Dark("dark");
+
+    companion object {
+        fun ofKey(key: String?): ThemeMode =
+            entries.firstOrNull { it.key == key } ?: System
+    }
+}
+
 /** 用户选择的存储授权方式。 */
 enum class AuthMethod(val key: String) {
     /** 「所有文件访问」权限（Android 11+）。 */
@@ -77,6 +91,26 @@ class PluginConfigStore(context: Context) {
     fun setUiStyle(style: UiStyle) {
         prefs.edit { putString(KEY_UI_STYLE, style.key) }
         mutableUiStyle.value = style
+    }
+
+    private val mutableThemeMode = MutableStateFlow(
+        ThemeMode.ofKey(prefs.getString(KEY_THEME_MODE, null)),
+    )
+    val themeMode: StateFlow<ThemeMode> = mutableThemeMode.asStateFlow()
+
+    fun setThemeMode(mode: ThemeMode) {
+        prefs.edit { putString(KEY_THEME_MODE, mode.key) }
+        mutableThemeMode.value = mode
+    }
+
+    private val mutablePrimaryColor = MutableStateFlow(
+        prefs.getInt(KEY_PRIMARY_COLOR, DEFAULT_PRIMARY_COLOR),
+    )
+    val primaryColor: StateFlow<Int> = mutablePrimaryColor.asStateFlow()
+
+    fun setPrimaryColor(color: Int) {
+        prefs.edit { putInt(KEY_PRIMARY_COLOR, color) }
+        mutablePrimaryColor.value = color
     }
 
     private val mutableAuthMethod =
@@ -181,6 +215,9 @@ class PluginConfigStore(context: Context) {
     private companion object {
         const val PREFS_NAME = "plugin_config"
         const val KEY_UI_STYLE = "ui_style"
+        const val KEY_THEME_MODE = "theme_mode"
+        const val KEY_PRIMARY_COLOR = "primary_color"
+        const val DEFAULT_PRIMARY_COLOR = 0xFF0001F9.toInt()
         const val KEY_AUTH_METHOD = "auth_method"
         const val KEY_SAF_TREE_URI = "saf_tree_uri"
         const val KEY_LAST_SPONSOR_PROMPT_AT = "last_sponsor_prompt_at"

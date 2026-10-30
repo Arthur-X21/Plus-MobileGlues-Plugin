@@ -1,5 +1,6 @@
 package com.fcl.plugin.mobileglues.ui.material
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExitTransition
@@ -11,6 +12,12 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import com.fcl.plugin.mobileglues.settings.AppearanceColors
+import com.fcl.plugin.mobileglues.settings.ThemeMode
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -65,6 +72,9 @@ fun MaterialHomePage(controller: AppController) {
     val deviceInfo by controller.deviceInfo.collectAsStateWithLifecycle()
     val config by controller.configStore.config.collectAsStateWithLifecycle()
     val untuned by controller.multidrawUntuned.collectAsStateWithLifecycle()
+    val themeMode by controller.pluginConfig.themeMode.collectAsStateWithLifecycle()
+    val primaryColor by controller.pluginConfig.primaryColor.collectAsStateWithLifecycle()
+
 
     LaunchedEffect(Unit) { controller.ensureDeviceInfo() }
 
@@ -110,6 +120,17 @@ fun MaterialHomePage(controller: AppController) {
 
         Spacer(Modifier.height(24.dp))
 
+        EnterUp(entered, delayMillis = 205) {
+            AppearancePanel(
+                themeMode = themeMode,
+                primaryColor = primaryColor,
+                onThemeModeChange = controller.pluginConfig::setThemeMode,
+                onColorChange = controller.pluginConfig::setPrimaryColor,
+            )
+        }
+
+        Spacer(Modifier.height(24.dp))
+
         EnterUp(entered, delayMillis = 230) {
             Crossfade(targetState = config, label = "summary") { current ->
                 if (current != null) {
@@ -149,6 +170,137 @@ fun MaterialHomePage(controller: AppController) {
     }
 }
 
+@Composable
+private fun AppearancePanel(
+    themeMode: ThemeMode,
+    primaryColor: Int,
+    onThemeModeChange: (ThemeMode) -> Unit,
+    onColorChange: (Int) -> Unit,
+) {
+    var hexInput by remember { mutableStateOf(AppearanceColors.toHex(primaryColor)) }
+    var invalidHex by remember { mutableStateOf(false) }
+
+    LaunchedEffect(primaryColor) {
+        hexInput = AppearanceColors.toHex(primaryColor)
+    }
+
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        modifier = Modifier
+            .widthIn(max = 360.dp)
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+        ) {
+            Text(
+                text = "Appearance",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+
+            Spacer(Modifier.height(14.dp))
+
+            SegmentedChoiceRow(
+                title = "Theme mode",
+                options = listOf("Light", "Dark", "System"),
+                selectedIndex = when (themeMode) {
+                    ThemeMode.Light -> 0
+                    ThemeMode.Dark -> 1
+                    ThemeMode.System -> 2
+                },
+                onSelect = { index ->
+                    onThemeModeChange(
+                        listOf(ThemeMode.Light, ThemeMode.Dark, ThemeMode.System)[index],
+                    )
+                },
+            )
+
+            Text(
+                text = "Accent color",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = 8.dp, bottom = 12.dp),
+            )
+
+            AppearanceColors.palette.chunked(5).forEach { colors ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    colors.forEach { color ->
+                        val selected = color == primaryColor
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .border(
+                                    width = if (selected) 3.dp else 1.dp,
+                                    color = if (selected) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.outlineVariant,
+                                    shape = CircleShape,
+                                )
+                                .padding(4.dp)
+                                .clip(CircleShape)
+                                .background(Color(color))
+                                .clickable {
+                                    onColorChange(color)
+                                    hexInput = AppearanceColors.toHex(color)
+                                    invalidHex = false
+                                },
+                        )
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                OutlinedTextField(
+                    value = hexInput,
+                    onValueChange = {
+                        hexInput = it
+                        invalidHex = false
+                    },
+                    label = { Text("Custom HEX") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+                Spacer(Modifier.size(8.dp))
+                Button(
+                    onClick = {
+                        val parsed = AppearanceColors.parseHex(hexInput)
+                        if (parsed != null) {
+                            onColorChange(parsed)
+                            hexInput = AppearanceColors.toHex(parsed)
+                            invalidHex = false
+                        } else {
+                            invalidHex = true
+                        }
+                    },
+                ) {
+                    Text("Apply")
+                }
+            }
+
+            if (invalidHex) {
+                Text(
+                    text = "Invalid HEX color. Use #RRGGBB or #AARRGGBB.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+            }
+        }
+    }
+}
+
 /** 大号字标。「Glues」用主色，是整页唯一的一处强调。 */
 @Composable
 private fun Wordmark(version: String) {
@@ -156,7 +308,7 @@ private fun Wordmark(version: String) {
         Text(
             text = buildAnnotatedString {
                 withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurface)) { append("Mobile") }
-                withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary)) { append("Glues") }
+                withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary)) { append("Glues+") }
             },
             style = MaterialTheme.typography.displaySmall.copy(
                 fontWeight = FontWeight.SemiBold,

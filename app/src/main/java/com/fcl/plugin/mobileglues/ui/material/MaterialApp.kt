@@ -13,6 +13,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,12 +41,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fcl.plugin.mobileglues.R
+import com.fcl.plugin.mobileglues.settings.ThemeMode
 import com.fcl.plugin.mobileglues.ui.AppController
 import com.fcl.plugin.mobileglues.ui.AppSubPage
 import com.fcl.plugin.mobileglues.ui.AppTab
@@ -58,7 +61,19 @@ import com.fcl.plugin.mobileglues.ui.AppTab
  */
 @Composable
 fun MaterialApp(controller: AppController) {
-    MgMaterialTheme {
+    val themeMode by controller.pluginConfig.themeMode.collectAsStateWithLifecycle()
+    val primaryColor by controller.pluginConfig.primaryColor.collectAsStateWithLifecycle()
+    val systemDark = isSystemInDarkTheme()
+    val darkTheme = when (themeMode) {
+        ThemeMode.System -> systemDark
+        ThemeMode.Light -> false
+        ThemeMode.Dark -> true
+    }
+
+    MgMaterialTheme(
+        darkTheme = darkTheme,
+        primaryColor = Color(primaryColor),
+    ) {
         val tab by controller.tab.collectAsStateWithLifecycle()
         val subPage by controller.subPage.collectAsStateWithLifecycle()
         val snackbarHostState = remember { SnackbarHostState() }

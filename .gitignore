@@ -25,3 +25,23 @@ google-services.json
 
 # Android Profiling
 *.hprof
+keystore.jks
+*.jks
+*.keystore
+*.backup
+*.old-backup
+*.signing-backup
+*.wordmark-backup
+*.hex-backup
+*.monochrome-backup
+*.appearance-backup
+*.description-backup
+icon_backup/
+icon_preview*.png
+MobileGlues_plus.png
+MobileGlues_foreground.png
+
+# Local backups
+*~
+*.backup
+*backup*
